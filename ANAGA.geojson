@@ -5,8 +5,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "1. Antiguo Convento de Santo Domingo",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.1.wav"
+        "Name": "1. Kirche Santo Domingo de Guzmán — Das Grab des Korsaren",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/1.wav"
       },
       "geometry": {
         "type": "Point",
@@ -16,8 +16,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "2. Camino viejo al pico del inglés",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.2.wav"
+        "Name": "2. Alter Weg zum Pico del Inglés — Die Reise durch die Zeit",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/2.wav"
       },
       "geometry": {
         "type": "Point",
@@ -27,8 +27,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "3. Mirador Pico del Inglés",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.3.wav"
+        "Name": "3. Aussichtspunkt Pico del Inglés — Der Balkon der Korsaren",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/3.wav"
       },
       "geometry": {
         "type": "Point",
@@ -38,8 +38,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "4. Mirador Bailadero",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.4.wav"
+        "Name": "4. Aussichtspunkt Bailadero — Wo sich Wege kreuzen… und Legenden",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/4.wav"
       },
       "geometry": {
         "type": "Point",
@@ -49,8 +49,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "5. Mirador Risco Amogoje",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.5.wav"
+        "Name": "5. Aussichtspunkt Risco Amogoje — Das Versteck der Schmuggler",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/5.wav"
       },
       "geometry": {
         "type": "Point",
@@ -60,8 +60,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "6. Taganana",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.6.wav"
+        "Name": "6. Taganana — Die Grenze zum Atlantik",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/6.wav"
       },
       "geometry": {
         "type": "Point",
@@ -71,8 +71,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "7. Roque de las Bodegas",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.7.wav"
+        "Name": "7. Roque de las Bodegas — Der Hafen des Schmuggels und Shakespeares Wein",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/7.wav"
       },
       "geometry": {
         "type": "Point",
@@ -82,8 +82,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "8. Playa de Almáciga",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.8.wav"
+        "Name": "8. Almáciga — Das Brüllen des wilden Meeres",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/8.wav"
       },
       "geometry": {
         "type": "Point",
@@ -93,8 +93,8 @@
     {
       "type": "Feature",
       "properties": {
-        "Name": "9. Castillo de Paso Alto",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguides/Anaga.9.wav"
+        "Name": "9. Castillo de Paso Alto — Der Wächter der Bucht",
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/9.wav"
       },
       "geometry": {
         "type": "Point",

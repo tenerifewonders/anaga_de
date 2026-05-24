@@ -1,34 +1,32 @@
-// Cargar ANAGA.geojson
-const ROUTE_URL = "./ANAGA.geojson";
+// URL del route.json en tu Netlify o Supabase
+const ROUTE_URL = "./route.json";
 
 async function loadGuide() {
   try {
     const response = await fetch(ROUTE_URL);
-    const data = await response.json();
+    const tracks = await response.json();
 
-    // Título y descripción
+    // Título y descripción (personalizado para alemán)
     document.getElementById("guide-title").textContent = "Anaga";
-    document.getElementById("guide-description").textContent = "The Pirate Coast";
+    document.getElementById("guide-description").textContent = "Die Piratenküste";
 
-    const tracksContainer = document.getElementById("audio-list");
+    const tracksContainer = document.getElementById("tracks");
     tracksContainer.innerHTML = "";
 
-    // Generar lista de audios según los puntos del GeoJSON
-    data.features.forEach((feature, index) => {
-      const li = document.createElement("li");
-      li.textContent = feature.properties.Name;
+    tracks.forEach(track => {
+      const div = document.createElement("div");
+      div.className = "track";
 
-      li.onclick = () => {
-        const player = document.getElementById("player");
-        player.src = `https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/audioguuides/Anaga.${index + 1}.wav`;
-        player.play();
-      };
+      div.innerHTML = `
+        <div class="track-title">${track.title}</div>
+        <audio controls src="${track.audio_url}"></audio>
+      `;
 
-      tracksContainer.appendChild(li);
+      tracksContainer.appendChild(div);
     });
 
   } catch (error) {
-    console.error("Error cargando la audioguía:", error);
+    console.error("Error al cargar la audioguía:", error);
   }
 }
 
