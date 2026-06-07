@@ -1,1 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audioguide Anaga (Deutsch)</title>
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#121212">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- ========================================== -->
+<!-- 🔒 CANDADO DE SEGURIDAD EXCLUSIVO: ANAGA   -->
+<!-- ========================================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  document.documentElement.style.display = 'none';
+
+  const supabaseUrl = 'https://xzymbvnljudyypdyuisf.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6eW1idm5sanVkeXlwZHl1aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjExMDYsImV4cCI6MjA5MjA5NzEwNn0.LRCkSCRF-0rDVAFkSvImWUNas21yXHZ29pQYUUZi8RY';
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  // Variable de entorno para esta guía específica
+  const GUIDE_ID = 'anaga_de';
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    let license = params.get('license');
+
+    // 1. Buscamos en la memoria exclusiva de esta guía
+    if (!license) {
+      license = localStorage.getItem(`tw_license_${GUIDE_ID}`);
+    }
+
+    if (!license) {
+      mostrarError("🔒 Zugang beschränkt", "Sie benötigen einen gültigen Lizenzcode, um diesen Audioguide zu hören.", true);
+      return;
+    }
+
+    // 2. Comprobamos en Supabase que la licencia existe Y PERTENECE a esta guía
+    const { data, error } = await supabaseClient
+      .from('licenses')
+      .select('id')
+      .eq('license_code', license)
+      .eq('guide', GUIDE_ID) // ¡Seguridad estricta! Tiene que coincidir con "anaga_de"
+      .single();
+
+    if (error || !data) {
+      localStorage.removeItem(`tw_license_${GUIDE_ID}`);
+      mostrarError("❌ Ungültige Lizenz", "Der angegebene Code ist ungültig oder gehört nicht zu diesem Audioguide.", false);
+      return;
+    }
+
+    // 3. ¡Todo correcto! Guardamos en memoria y mostramos la web
+    localStorage.setItem(`tw_license_${GUIDE_ID}`, license);
+    document.documentElement.style.display = '';
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+  });
+
+  function mostrarError(titulo, mensaje, mostrarBoton) {
+    const enlaceCompra = "https://tenerifewonders.github.io/"; 
+    document.documentElement.innerHTML = `
+      <div style="font-family: sans-serif; text-align: center; padding: 40px 20px; background-color: #f8f9fa; height: 100vh; box-sizing: border-box;">
+        <div style="background: white; max-width: 400px; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin-top: 0;">${titulo}</h2>
+          <p style="color: #666; line-height: 1.5; margin-bottom: 25px;">${mensaje}</p>
+          ${mostrarBoton ? `<a href="${enlaceCompra}" style="background: #007bff; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">Audioguide kaufen</a>` : ''}
+        </div>
+      </div>
+    `;
+    document.documentElement.style.display = '';
+  }
+</script>
+<!-- ========================================== -->
+ 
+
+
+  <style>
+    body { margin: 0; font-family: sans-serif; padding-bottom: 60px; }
+    #map { height: 50vh; width: 100%; }
+    #audio-list { padding: 15px; list-style: none; margin: 0; }
+    #audio-list li { padding: 12px; border-bottom: 1px solid #ddd; cursor: pointer; transition: all 0.2s ease; }
+    #audio-list li:hover { background: #f0f0f0; }
+    #audio-list li.active-track {
+      background: #e3f2fd;
+      border-left: 5px solid #007bff;
+      font-weight: bold;
+      color: #0056b3;
+    }
+    #audio-player { width: 100%; position: fixed; bottom: 0; left: 0; z-index: 9999; }
+    .marker-active {
+      filter: hue-rotate(140deg) saturate(2.5) brightness(0.9) !important;
+      z-index: 1000 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <p> 📍
+    <a href="https://www.google.com/maps/dir/28.485858,-16.313423/28.535007,-16.268433/28.533007,-16.263997/28.549166,-16.206877/28.558258,-16.205677/28.560470,-16.217270/28.571198,-16.204568/28.572064,-16.192508/28.480816,-16.240959" 
+     target="_blank">
+     Google Maps Route verfügbar
+  </a>
+  <span>(Datenverbindung erforderlich)</span>
+  </p>
+
+  <p> 📄
+      <a href="DE-ANAGA.html" target="_blank">
+       Öffnungszeiten und praktische Tipps
+    </a>
+  </p>
+
+  <div id="android-msg" style="display:none; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; margin: 10px;">
+    ➕ <strong> Um die App auf Android zu installieren und offline zu nutzen: Klicken Sie auf das Browsermenü (drei Punkte) → Zum Startbildschirm hinzufügen / Installieren</strong>
+  </div>
+
+  <div id="ios-msg" style="display:none; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; margin: 10px;">
+    ➕ <strong> Um die App auf Ihrem iPhone zu installieren und offline zu nutzen: Teilen → Zum Startbildschirm hinzufügen</strong>
+  </div>
+
+  <ul id="audio-list">
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.0.mp3">0. Intro</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.1.mp3">1. Kirche Santo Domingo de Guzmán — Das Grab des Korsaren</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.2.mp3">2. Alter Weg zum Pico del Inglés — Die Reise durch die Zeit</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.3.mp3">3. Aussichtspunkt Pico del Inglés — Der Balkon der Korsaren</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.4.mp3">4. Aussichtspunkt Bailadero — Wo sich Wege kreuzen… und Legenden</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.5.mp3">5. Aussichtspunkt Risco Amogoje — Das Versteck der Schmuggler</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.6.mp3">6. Taganana — Die Grenze zum Atlantik</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.7.mp3">7. Roque de las Bodegas — Der Hafen des Schmuggels und Shakespeares Wein</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.8.mp3">8. Almáciga — Das Brüllen des wilden Meeres</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.9.mp3">9. Castillo de Paso Alto — Der Wächter der Bucht</li>
+  </ul>
+
+  <audio id="audio-player" controls controlsList="nodownload"></audio>
+
+  <script>
+    // CENTRADO APROXIMADO DE ANAGA (Deberás ajustarlo si no cuadra perfecto)
+    const map = L.map('map', { attributionControl: false }).setView([28.5375, -16.2166], 12); 
+
+    L.tileLayer('./tiles/{z}/{x}/{y}.png', {
+      minZoom: 11,
+      maxZoom: 18,
+      tileSize: 256
+    }).addTo(map);
+
+    const markersByAudio = {};
+    let activeMarker = null;
+
+    function activateTrack(audioUrl, triggerSource) {
+      const player = document.getElementById("audio-player");
+      
+      // En Anaga no hay saltos silenciosos ni sub-pistas como en Candelaria, así que el código es más limpio.
+      if (player.src !== audioUrl) {
+        player.src = audioUrl;
+        player.play();
+      } else if (player.paused) {
+        player.play();
+      }
+
+      const items = document.querySelectorAll("#audio-list li");
+      items.forEach(li => {
+        if (li.getAttribute("data-audio") === audioUrl) {
+          li.classList.add("active-track");
+          if (triggerSource !== 'list') {
+            li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else {
+          li.classList.remove("active-track");
+        }
+      });
+
+      const marker = markersByAudio[audioUrl];
+      if (marker) {
+        if (activeMarker && activeMarker._icon) {
+          activeMarker._icon.classList.remove("marker-active");
+        }
+        activeMarker = marker;
+        if (marker._icon) {
+          marker._icon.classList.add("marker-active");
+        }
+        if (triggerSource !== 'marker') {
+          marker.openPopup();
+          map.setView(marker.getLatLng(), map.getZoom() < 13 ? 13 : map.getZoom(), { animate: true });
+        }
+      }
+    }
+
+    // ASEGURATE DE QUE EL ARCHIVO DEL MAPA SE LLAME ASÍ EXACTAMENTE (ANAGA.geojson)
+    fetch('./ANAGA.geojson')
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data, {
+          onEachFeature: (feature, layer) => {
+            // Reemplazo automático de .wav a .mp3 para el mapa
+            let audioUrl = feature.properties.audio;
+            if (audioUrl) audioUrl = audioUrl.replace('.wav', '.mp3');
+            
+            const name = feature.properties.Name;
+            layer.bindPopup(name);
+
+            if (audioUrl) {
+              markersByAudio[audioUrl] = layer;
+            }
+            layer.on("click", () => {
+              activateTrack(audioUrl, 'marker');
+            });
+          }
+        }).addTo(map);
+      });
+
+    const items = document.querySelectorAll("#audio-list li");
+    items.forEach(li => {
+      li.addEventListener("click", () => {
+        const url = li.getAttribute("data-audio");
+        if (url) {
+          activateTrack(url, 'list');
+        }
+      });
+    });
+
+    map.locate({ setView: false });
+    map.on('locationfound', e => {
+      L.circleMarker(e.latlng, {
+        radius: 8, color: "#007bff", fillColor: "#3fa0ff", fillOpacity: 0.8
+      }).addTo(map);
+    });
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js");
+    }
+  </script>
+  <script>
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+      document.getElementById('ios-msg').style.display = 'block';
+    }
+    if (/android/i.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
+      document.getElementById('android-msg').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
