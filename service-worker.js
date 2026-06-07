@@ -1,9 +1,9 @@
-const CACHE_NAME = "anaga-de-v8";
+const CACHE_NAME = "anaga-de-v9";
 
 const ASSETS = [
   "./",
   "./index.html",
-  "./ANAGA.geojson",
+  "./Anaga.geojson",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
@@ -12,19 +12,21 @@ const ASSETS = [
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ];
 
+// OJO: Actualizados a los nuevos enlaces .mp3 que me pasaste antes
 const AUDIO_URLS = [
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/0.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/1.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/2.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/3.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/4.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/5.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/6.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/7.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/8.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/9.wav"
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.0.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.1.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.2.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.3.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.4.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.5.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.6.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.7.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.8.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.9.mp3"
 ];
 
+// Tu lista de mapas mantenida intacta
 const TILES = [
   "./tiles/11/927/853.png",
   "./tiles/11/927/854.png",
@@ -331,9 +333,9 @@ async function cacheListTolerantly(cache, list) {
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      // 1) Cargar los archivos críticos. Si falla alguno de estos, falla la instalación.
+      // 1) Cargar los archivos críticos.
       await cache.addAll(ASSETS);
-      // 2) Cachear los audios y los tiles de forma tolerante (uno a uno) en background.
+      // 2) Cachear audios y mapas tolerando fallos.
       cacheListTolerantly(cache, AUDIO_URLS);
       cacheListTolerantly(cache, TILES);
     })
@@ -355,19 +357,17 @@ self.addEventListener("activate", event => {
   self.clients.claim();
 });
 
-// Función para manejar Range Requests (206 Partial Content) para audios
+// Helper para Range Requests de Audios .mp3 (iOS Streaming)
 async function handleRangeRequest(request, rangeHeader) {
   const cachedResponse = await caches.match(request.url);
   
   if (!cachedResponse) {
-    // Si no está en caché, hacemos pass-through directo
-    // y en paralelo intentamos guardar la versión completa (200 OK) en caché para la próxima vez
     const cleanRequest = new Request(request.url);
     fetch(cleanRequest).then(networkResponse => {
       if (networkResponse.status === 200) {
         caches.open(CACHE_NAME).then(cache => cache.put(request.url, networkResponse));
       }
-    }).catch(err => console.warn("Fallo al descargar en background:", err));
+    }).catch(err => console.warn("Fallo al descargar audio en background:", err));
 
     return fetch(request);
   }
@@ -375,7 +375,6 @@ async function handleRangeRequest(request, rangeHeader) {
   const arrayBuffer = await cachedResponse.arrayBuffer();
   const totalSize = arrayBuffer.byteLength;
 
-  // Parsear el header Range: bytes=X-Y
   const bytes = /^bytes=(\d+)-(\d+)?$/.exec(rangeHeader);
   if (!bytes) {
     return cachedResponse;
@@ -391,29 +390,27 @@ async function handleRangeRequest(request, rangeHeader) {
     headers: {
       'Content-Range': `bytes ${start}-${end}/${totalSize}`,
       'Content-Length': chunk.byteLength.toString(),
-      'Content-Type': cachedResponse.headers.get('Content-Type') || 'audio/wav',
+      'Content-Type': cachedResponse.headers.get('Content-Type') || 'audio/mpeg',
       'Accept-Ranges': 'bytes'
     }
   });
 }
 
-// Interceptar peticiones
+// Fetch Interceptor
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
   
-  // Solo interceptar peticiones GET con protocolo HTTP o HTTPS (ignora chrome-extension, etc.)
   if (event.request.method !== 'GET' || (url.protocol !== 'http:' && url.protocol !== 'https:')) {
     return;
   }
 
   const rangeHeader = event.request.headers.get('range');
 
-  // 1) Si es una petición de audio (Supabase o terminación .wav)
-  if (url.href.includes("supabase.co/storage") || url.pathname.endsWith(".wav")) {
+  // 1) Peticiones de audio (Acepta tanto .wav como los nuevos .mp3)
+  if (url.href.includes("supabase.co/storage") || url.pathname.endsWith(".mp3") || url.pathname.endsWith(".wav")) {
     if (rangeHeader) {
       event.respondWith(handleRangeRequest(event.request, rangeHeader));
     } else {
-      // Petición de audio sin Range (ej. precarga)
       event.respondWith(
         caches.match(event.request.url).then(cached => {
           return cached || fetch(event.request).then(response => {
@@ -429,7 +426,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 2) Cachear JSON/GeoJSON con estrategia network-first
+  // 2) Archivos JSON y de rutas (Estrategia: Network First, fallback a caché)
   if (url.pathname.endsWith(".json") || url.pathname.endsWith(".geojson")) {
     event.respondWith(
       fetch(event.request)
@@ -447,12 +444,11 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 3) Cache-first con escritura dinámica para assets estáticos (ej. tiles de mapas y CDN Leaflet)
+  // 3) Imágenes de Mapas y el resto de archivos base (Estrategia: Cache First)
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(networkResponse => {
-        // Guardar dinámicamente en caché si la respuesta es satisfactoria
         if (networkResponse.status === 200 || networkResponse.status === 0) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {

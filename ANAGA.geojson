@@ -6,7 +6,7 @@
       "type": "Feature",
       "properties": {
         "Name": "1. Kirche Santo Domingo de Guzmán — Das Grab des Korsaren",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/1.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.1.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -17,7 +17,7 @@
       "type": "Feature",
       "properties": {
         "Name": "2. Alter Weg zum Pico del Inglés — Die Reise durch die Zeit",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/2.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.2.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -28,7 +28,7 @@
       "type": "Feature",
       "properties": {
         "Name": "3. Aussichtspunkt Pico del Inglés — Der Balkon der Korsaren",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/3.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.3.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -39,7 +39,7 @@
       "type": "Feature",
       "properties": {
         "Name": "4. Aussichtspunkt Bailadero — Wo sich Wege kreuzen… und Legenden",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/4.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.4.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -50,7 +50,7 @@
       "type": "Feature",
       "properties": {
         "Name": "5. Aussichtspunkt Risco Amogoje — Das Versteck der Schmuggler",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/5.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.5.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -61,7 +61,7 @@
       "type": "Feature",
       "properties": {
         "Name": "6. Taganana — Die Grenze zum Atlantik",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/6.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.6.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -72,7 +72,7 @@
       "type": "Feature",
       "properties": {
         "Name": "7. Roque de las Bodegas — Der Hafen des Schmuggels und Shakespeares Wein",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/7.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.7.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -83,7 +83,7 @@
       "type": "Feature",
       "properties": {
         "Name": "8. Almáciga — Das Brüllen des wilden Meeres",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/8.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.8.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -94,7 +94,7 @@
       "type": "Feature",
       "properties": {
         "Name": "9. Castillo de Paso Alto — Der Wächter der Bucht",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/9.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.9.mp3"
       },
       "geometry": {
         "type": "Point",

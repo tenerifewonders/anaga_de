@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Audioguide Anaga</title>
+  <title>Audioguide Anaga (Deutsch)</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -14,8 +14,74 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- ========================================== -->
+<!-- 🔒 CANDADO DE SEGURIDAD CON MEMORIA        -->
+<!-- ========================================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  document.documentElement.style.display = 'none';
+
+  const supabaseUrl = 'https://xzymbvnljudyypdyuisf.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6eW1idm5sanVkeXlwZHl1aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjExMDYsImV4cCI6MjA5MjA5NzEwNn0.LRCkSCRF-0rDVAFkSvImWUNas21yXHZ29pQYUUZi8RY';
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    let license = params.get('license');
+
+    // Novedad: Si no hay licencia en el enlace, buscamos en la memoria del teléfono
+    if (!license) {
+      license = localStorage.getItem('tw_audioguide_license');
+    }
+
+    if (!license) {
+      mostrarError("🔒 Zugang beschränkt", "Sie benötigen einen gültigen Lizenzcode, um diesen Audioguide zu hören.", true);
+      // Para Candelaria (Inglés), cambia el texto de arriba por el correspondiente
+      return;
+    }
+
+    // Comprobamos en Supabase si la licencia existe
+    const { data, error } = await supabaseClient
+      .from('licenses')
+      .select('id')
+      .eq('license_code', license)
+      .single();
+
+    if (error || !data) {
+      // Si la licencia es falsa o ha sido borrada, la borramos también de la memoria
+      localStorage.removeItem('tw_audioguide_license');
+      mostrarError("❌ Ungültige Lizenz", "Der angegebene Code ist ungültig oder existiert nicht.", false);
+      return;
+    }
+
+    // Novedad: ¡Éxito! Guardamos la licencia en la memoria del móvil para la próxima vez
+    localStorage.setItem('tw_audioguide_license', license);
+
+    // Mostramos la audioguía
+    document.documentElement.style.display = '';
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+  });
+
+  function mostrarError(titulo, mensaje, mostrarBoton) {
+    const enlaceCompra = "https://tenerifewonders.github.io/"; 
+    document.documentElement.innerHTML = `
+      <div style="font-family: sans-serif; text-align: center; padding: 40px 20px; background-color: #f8f9fa; height: 100vh; box-sizing: border-box;">
+        <div style="background: white; max-width: 400px; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin-top: 0;">${titulo}</h2>
+          <p style="color: #666; line-height: 1.5; margin-bottom: 25px;">${mensaje}</p>
+          ${mostrarBoton ? `<a href="${enlaceCompra}" style="background: #007bff; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">Audioguide kaufen</a>` : ''}
+        </div>
+      </div>
+    `;
+    document.documentElement.style.display = '';
+  }
+</script>
+<!-- ========================================== -->
+ 
+
+
   <style>
-    body { margin: 0; font-family: sans-serif; padding-bottom: 60px; /*espacio para el player*/ }
+    body { margin: 0; font-family: sans-serif; padding-bottom: 60px; }
     #map { height: 50vh; width: 100%; }
     #audio-list { padding: 15px; list-style: none; margin: 0; }
     #audio-list li { padding: 12px; border-bottom: 1px solid #ddd; cursor: pointer; transition: all 0.2s ease; }
@@ -26,9 +92,7 @@
       font-weight: bold;
       color: #0056b3;
     }
-    #audio-player { width: 100%; position: fixed; bottom: 0; left: 0; z-index: 9999; /*para que se vea en android*/}
-    
-    /* Clase para destacar el marker activo en rojo */
+    #audio-player { width: 100%; position: fixed; bottom: 0; left: 0; z-index: 9999; }
     .marker-active {
       filter: hue-rotate(140deg) saturate(2.5) brightness(0.9) !important;
       z-index: 1000 !important;
@@ -37,103 +101,62 @@
 </head>
 
 <body>
-
-  <!-- MAPA -->
   <div id="map"></div>
 
-<p> 📍
-  <a href="https://www.google.com/maps/dir/28.485858,-16.313423/28.535007,-16.268433/28.533007,-16.263997/28.549166,-16.206877/28.558258,-16.205677/28.560470,-16.217270/28.571198,-16.204568/28.572064,-16.192508/28.480816,-16.240959" 
+  <p> 📍
+    <a href="https://www.google.com/maps/dir/28.485858,-16.313423/28.535007,-16.268433/28.533007,-16.263997/28.549166,-16.206877/28.558258,-16.205677/28.560470,-16.217270/28.571198,-16.204568/28.572064,-16.192508/28.480816,-16.240959" 
      target="_blank">
      Google Maps Route verfügbar
   </a>
   <span>(Datenverbindung erforderlich)</span>
-</p>
+  </p>
 
-<p> 📄
-  <a href="DE_ANAGA.html" target="_blank">
-     Öffnungszeiten und praktische Hinweise
-  </a>
-</p>
+  <p> 📄
+      <a href="DE-ANAGA.html" target="_blank">
+       Öffnungszeiten und praktische Tipps
+    </a>
+  </p>
 
-<div id="android-msg" style="display:none;">
-➕ <strong> Zum Installieren der App auf Android und zur Offline-Nutzung: Klicken Sie auf das Browsermenü (drei Punkte) → Zum Startbildschirm hinzufügen / Installieren</strong>
-</div>
+  <div id="android-msg" style="display:none; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; margin: 10px;">
+    ➕ <strong> Um die App auf Android zu installieren und offline zu nutzen: Klicken Sie auf das Browsermenü (drei Punkte) → Zum Startbildschirm hinzufügen / Installieren</strong>
+  </div>
 
-<div id="ios-msg" style="display:none;">
-➕ <strong> So installieren Sie die App auf Ihrem iPhone und nutzen sie offline: Teilen → Zum Home-Bildschirm hinzufügen</strong>
-</div>
+  <div id="ios-msg" style="display:none; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; margin: 10px;">
+    ➕ <strong> Um die App auf Ihrem iPhone zu installieren und offline zu nutzen: Teilen → Zum Startbildschirm hinzufügen</strong>
+  </div>
 
-  <!-- LISTA DE AUDIOS -->
   <ul id="audio-list">
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/0.wav">
-      0. Intro
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/1.wav">
-      1. Kirche Santo Domingo de Guzmán — Das Grab des Korsaren
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/2.wav">
-      2. Alter Weg zum Pico del Inglés — Die Reise durch die Zeit
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/3.wav">
-      3. Aussichtspunkt Pico del Inglés — Der Balkon der Korsaren
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/4.wav">
-      4. Aussichtspunkt Bailadero — Wo sich Wege kreuzen… und Legenden
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/5.wav">
-      5. Aussichtspunkt Risco Amogoje — Das Versteck der Schmuggler
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/6.wav">
-      6. Taganana — Die Grenze zum Atlantik
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/7.wav">
-      7. Roque de las Bodegas — Der Hafen des Schmuggels und Shakespeares Wein
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/8.wav">
-      8. Almáciga — Das Brüllen des wilden Meeres
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/9.wav">
-      9. Castillo de Paso Alto — Der Wächter der Bucht
-    </li>
-
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.0.mp3">0. Intro</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.1.mp3">1. Kirche Santo Domingo de Guzmán — Das Grab des Korsaren</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.2.mp3">2. Alter Weg zum Pico del Inglés — Die Reise durch die Zeit</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.3.mp3">3. Aussichtspunkt Pico del Inglés — Der Balkon der Korsaren</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.4.mp3">4. Aussichtspunkt Bailadero — Wo sich Wege kreuzen… und Legenden</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.5.mp3">5. Aussichtspunkt Risco Amogoje — Das Versteck der Schmuggler</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.6.mp3">6. Taganana — Die Grenze zum Atlantik</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.7.mp3">7. Roque de las Bodegas — Der Hafen des Schmuggels und Shakespeares Wein</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.8.mp3">8. Almáciga — Das Brüllen des wilden Meeres</li>
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.9.mp3">9. Castillo de Paso Alto — Der Wächter der Bucht</li>
   </ul>
 
-
-  <!-- PLAYER -->
   <audio id="audio-player" controls controlsList="nodownload"></audio>
 
   <script>
-    // Inicializar mapa
-    const map = L.map('map', {
-      attributionControl: false
-    }).setView([28.535, -16.245], 12);
+    // CENTRADO APROXIMADO DE ANAGA (Deberás ajustarlo si no cuadra perfecto)
+    const map = L.map('map', { attributionControl: false }).setView([28.5375, -16.2166], 12); 
 
-    // Tiles locales
     L.tileLayer('./tiles/{z}/{x}/{y}.png', {
       minZoom: 11,
-      maxZoom: 14,
+      maxZoom: 18,
       tileSize: 256
     }).addTo(map);
 
-    // Diccionario de marcadores vinculados por audio URL
     const markersByAudio = {};
     let activeMarker = null;
 
-    // Función unificada para activar pista (audio, lista y marcador en mapa)
     function activateTrack(audioUrl, triggerSource) {
       const player = document.getElementById("audio-player");
       
-      // 1) Reproducir audio
+      // En Anaga no hay saltos silenciosos ni sub-pistas como en Candelaria, así que el código es más limpio.
       if (player.src !== audioUrl) {
         player.src = audioUrl;
         player.play();
@@ -141,7 +164,6 @@
         player.play();
       }
 
-      // 2) Activar visualmente en la lista
       const items = document.querySelectorAll("#audio-list li");
       items.forEach(li => {
         if (li.getAttribute("data-audio") === audioUrl) {
@@ -154,21 +176,15 @@
         }
       });
 
-      // 3) Activar en el mapa
       const marker = markersByAudio[audioUrl];
       if (marker) {
-        // Quitar color al marcador activo anterior
         if (activeMarker && activeMarker._icon) {
           activeMarker._icon.classList.remove("marker-active");
         }
-
-        // Asignar color al nuevo marcador
         activeMarker = marker;
         if (marker._icon) {
           marker._icon.classList.add("marker-active");
         }
-
-        // Si el click no se originó en el propio marcador, centrar y abrir popup
         if (triggerSource !== 'marker') {
           marker.openPopup();
           map.setView(marker.getLatLng(), map.getZoom() < 13 ? 13 : map.getZoom(), { animate: true });
@@ -176,22 +192,22 @@
       }
     }
 
-    // Cargar puntos desde GeoJSON
-    fetch('./ANAGA.geojson')
+    // ASEGURATE DE QUE EL ARCHIVO DEL MAPA SE LLAME ASÍ EXACTAMENTE (Anaga.geojson)
+    fetch('./Anaga.geojson')
       .then(res => res.json())
       .then(data => {
         L.geoJSON(data, {
           onEachFeature: (feature, layer) => {
-            const audioUrl = feature.properties.audio;
+            // Reemplazo automático de .wav a .mp3 para el mapa
+            let audioUrl = feature.properties.audio;
+            if (audioUrl) audioUrl = audioUrl.replace('.wav', '.mp3');
+            
             const name = feature.properties.Name;
-
             layer.bindPopup(name);
 
-            // Guardar marcador en el diccionario si tiene audio asignado
             if (audioUrl) {
               markersByAudio[audioUrl] = layer;
             }
-
             layer.on("click", () => {
               activateTrack(audioUrl, 'marker');
             });
@@ -199,7 +215,6 @@
         }).addTo(map);
       });
 
-    // Activar interacción desde la lista de audios
     const items = document.querySelectorAll("#audio-list li");
     items.forEach(li => {
       li.addEventListener("click", () => {
@@ -210,36 +225,26 @@
       });
     });
 
-    // Geolocalización
     map.locate({ setView: false });
-
     map.on('locationfound', e => {
       L.circleMarker(e.latlng, {
-        radius: 8,
-        color: "#007bff",
-        fillColor: "#3fa0ff",
-        fillOpacity: 0.8
+        radius: 8, color: "#007bff", fillColor: "#3fa0ff", fillOpacity: 0.8
       }).addTo(map);
     });
   </script>
 
-  <!-- Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js");
     }
   </script>
-
-
-<script>
-  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
-    document.getElementById('ios-msg').style.display = 'block';
-  }
-  if (/android/i.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
-    document.getElementById('android-msg').style.display = 'block';
-  }
-</script>
-
-
+  <script>
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+      document.getElementById('ios-msg').style.display = 'block';
+    }
+    if (/android/i.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
+      document.getElementById('android-msg').style.display = 'block';
+    }
+  </script>
 </body>
 </html>
