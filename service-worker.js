@@ -1,4 +1,4 @@
-const CACHE_NAME = "anaga-de-v9";
+const CACHE_NAME = "anaga-de-v10";
 
 const ASSETS = [
   "./",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
-  "./DE_ANAGA.html",
+  "./DE-ANAGA.html",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ];
