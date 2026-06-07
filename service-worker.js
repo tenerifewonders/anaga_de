@@ -3,7 +3,7 @@ const CACHE_NAME = "anaga-de-v9";
 const ASSETS = [
   "./",
   "./index.html",
-  "./Anaga.geojson",
+  "./ANAGA.geojson",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
