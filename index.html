@@ -15,7 +15,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <!-- ========================================== -->
-<!-- 🔒 CANDADO DE SEGURIDAD CON MEMORIA        -->
+<!-- 🔒 CANDADO DE SEGURIDAD EXCLUSIVO: ANAGA   -->
 <!-- ========================================== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -25,39 +25,39 @@
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6eW1idm5sanVkeXlwZHl1aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjExMDYsImV4cCI6MjA5MjA5NzEwNn0.LRCkSCRF-0rDVAFkSvImWUNas21yXHZ29pQYUUZi8RY';
   const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+  // Variable de entorno para esta guía específica
+  const GUIDE_ID = 'anaga_de';
+
   window.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     let license = params.get('license');
 
-    // Novedad: Si no hay licencia en el enlace, buscamos en la memoria del teléfono
+    // 1. Buscamos en la memoria exclusiva de esta guía
     if (!license) {
-      license = localStorage.getItem('tw_audioguide_license');
+      license = localStorage.getItem(`tw_license_${GUIDE_ID}`);
     }
 
     if (!license) {
       mostrarError("🔒 Zugang beschränkt", "Sie benötigen einen gültigen Lizenzcode, um diesen Audioguide zu hören.", true);
-      // Para Candelaria (Inglés), cambia el texto de arriba por el correspondiente
       return;
     }
 
-    // Comprobamos en Supabase si la licencia existe
+    // 2. Comprobamos en Supabase que la licencia existe Y PERTENECE a esta guía
     const { data, error } = await supabaseClient
       .from('licenses')
       .select('id')
       .eq('license_code', license)
+      .eq('guide', GUIDE_ID) // ¡Seguridad estricta! Tiene que coincidir con "anaga_de"
       .single();
 
     if (error || !data) {
-      // Si la licencia es falsa o ha sido borrada, la borramos también de la memoria
-      localStorage.removeItem('tw_audioguide_license');
-      mostrarError("❌ Ungültige Lizenz", "Der angegebene Code ist ungültig oder existiert nicht.", false);
+      localStorage.removeItem(`tw_license_${GUIDE_ID}`);
+      mostrarError("❌ Ungültige Lizenz", "Der angegebene Code ist ungültig oder gehört nicht zu diesem Audioguide.", false);
       return;
     }
 
-    // Novedad: ¡Éxito! Guardamos la licencia en la memoria del móvil para la próxima vez
-    localStorage.setItem('tw_audioguide_license', license);
-
-    // Mostramos la audioguía
+    // 3. ¡Todo correcto! Guardamos en memoria y mostramos la web
+    localStorage.setItem(`tw_license_${GUIDE_ID}`, license);
     document.documentElement.style.display = '';
     setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
   });
