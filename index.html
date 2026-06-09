@@ -52,7 +52,8 @@
 
     if (error || !data) {
       localStorage.removeItem(`tw_license_${GUIDE_ID}`);
-      mostrarError("❌ Ungültige Lizenz", "Der angegebene Code ist ungültig oder gehört nicht zu diesem Audioguide.", false);
+      // AQUÍ ESTÁ EL TRUE CORREGIDO 👇
+      mostrarError("❌ Ungültige Lizenz", "Der angegebene Code ist ungültig oder gehört nicht zu diesem Audioguide.", true);
       return;
     }
 
@@ -78,7 +79,6 @@
 </script>
 <!-- ========================================== -->
  
-
 
   <style>
     body { margin: 0; font-family: sans-serif; padding-bottom: 60px; }
