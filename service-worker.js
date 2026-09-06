@@ -1,4 +1,4 @@
-const CACHE_NAME = "anaga-de-v12";
+const CACHE_NAME = "anaga-de-v13";
 
 const ASSETS = [
 "./",
@@ -26,7 +26,7 @@ const AUDIO_URLS = [
 ];
 
 const TILES = [
-"./tiles/11/927/853.png",
+  "./tiles/11/927/853.png",
   "./tiles/11/927/854.png",
   "./tiles/11/927/855.png",
   "./tiles/11/927/856.png",
