@@ -1,19 +1,20 @@
-const CACHE_NAME = "anaga-de-v13";
+const CACHE_NAME = "anaga-de-v11";
 
-const ASSETS = [
-"./",
+// 1. Core App Shell (Lightweight - installs in <300ms)
+const CORE_ASSETS = [
+  "./",
   "./index.html",
-  "./ANAGA.geojson",
   "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./DE-ANAGA.html",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
-  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+  "./ANAGA.geojson",
+  "./DE-ANAGA.html",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 const AUDIO_URLS = [
-"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.0.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.0.mp3",
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.1.mp3",
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.2.mp3",
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.3.mp3",
@@ -25,7 +26,7 @@ const AUDIO_URLS = [
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/anaga_de/Anaga.9.mp3"
 ];
 
-const TILES = [
+const TILE_URLS = [
   "./tiles/11/927/853.png",
   "./tiles/11/927/854.png",
   "./tiles/11/927/855.png",
@@ -316,36 +317,20 @@ const TILES = [
   "./tiles/14/7456/6840.png"
 ];
 
-// 1. INSTALL: Pre-cache static assets and all audio files for offline use
+// 1. INSTALL: Instant installation of core app shell
 self.addEventListener("install", (e) => {
   self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      console.log("[SW] Pre-caching assets and audio for offline...");
-      await cache.addAll(ASSETS).catch(err => console.warn("[SW] Asset pre-cache warning:", err));
-      
-      // Pre-fetch all audio files with clean GET requests (no range header) to ensure 200 OK status
-      for (const url of AUDIO_URLS) {
-        try {
-          const req = new Request(url, { method: "GET" });
-          const res = await fetch(req);
-          if (res && res.status === 200) {
-            await cache.put(url, res);
-          }
-        } catch (err) {
-          console.warn("[SW] Audio pre-cache warning for:", url, err);
-        }
-      }
-
-      // Pre-cache tiles if available
-      if (TILES.length > 0) {
-        await cache.addAll(TILES).catch(err => console.warn("[SW] Tiles pre-cache warning:", err));
-      }
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("[SW] Pre-caching core app shell...");
+      return cache.addAll(CORE_ASSETS).catch((err) => {
+        console.warn("[SW] App shell pre-cache warning:", err);
+      });
     })
   );
 });
 
-// 2. ACTIVATE: Clean old caches & claim clients
+// 2. ACTIVATE: Clean old caches, claim clients & run parallel background pre-cache
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
@@ -356,28 +341,80 @@ self.addEventListener("activate", (e) => {
       )
     ).then(() => self.clients.claim())
   );
+
+  // Background caching of all audio files & map tiles (non-blocking)
+  preCacheOfflineContent();
 });
 
-// 3. FETCH: Smart Cache & HTTP Range Request handler for HTML5 <audio> offline playback
+// Message listener for skip waiting
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+// Fast parallel batch precaching function
+async function preCacheOfflineContent() {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    console.log("[SW] Starting background precache for tiles and audio...");
+
+    // Helper for fast parallel batch fetch
+    async function fetchBatch(urls, batchSize) {
+      for (let i = 0; i < urls.length; i += batchSize) {
+        const batch = urls.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async (url) => {
+            try {
+              const req = url.endsWith(".mp3") ? new Request(url, { method: "GET" }) : url;
+              const res = await fetch(req);
+              if (res && res.status === 200) {
+                await cache.put(url, res);
+              }
+            } catch (err) {
+              // Silently ignore individual tile/audio network glitches
+            }
+          })
+        );
+      }
+    }
+
+    // Pre-cache all audio MP3 files (3 at a time)
+    await fetchBatch(AUDIO_URLS, 3);
+    // Pre-cache all map tile PNGs (15 at a time)
+    await fetchBatch(TILE_URLS, 15);
+
+    console.log("[SW] Background precache complete! Notifying app...");
+
+    // Notify all open client tabs/windows
+    const clientsList = await self.clients.matchAll();
+    for (const client of clientsList) {
+      client.postMessage({ type: "CACHE_COMPLETE" });
+    }
+  } catch (err) {
+    console.warn("[SW] Background precache warning:", err);
+  }
+}
+
+// 3. FETCH: Smart Cache-First for Assets/Tiles + HTTP Range Request Handler for Audios
 self.addEventListener("fetch", (e) => {
   const url = e.request.url;
 
-  // Intercept audio requests (MP3s) or Supabase audio storage URLs
+  // Audio Range Request Handler for HTML5 Audio (iOS & Android)
   if (url.endsWith(".mp3") || url.includes("supabase.co/storage/v1/object/public/")) {
     e.respondWith(handleAudioFetch(e.request));
     return;
   }
 
-  // Standard static assets & tiles
+  // Cache-First strategy for Map Tiles & App Assets
   e.respondWith(
     caches.match(e.request).then((cachedRes) => {
       if (cachedRes) return cachedRes;
       return fetch(e.request).then((netRes) => {
-        if (!netRes || netRes.status !== 200) {
-          return netRes;
+        if (netRes && netRes.status === 200) {
+          const resToCache = netRes.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resToCache));
         }
-        const resToCache = netRes.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resToCache));
         return netRes;
       }).catch(() => {
         if (e.request.mode === "navigate") {
@@ -388,12 +425,11 @@ self.addEventListener("fetch", (e) => {
   );
 });
 
-// Helper: Handle HTTP Range Requests for cached audio files (iOS Safari & Android Chrome)
+// Helper: Handle HTTP Range Requests for cached audio files
 async function handleAudioFetch(request) {
   const cache = await caches.open(CACHE_NAME);
   let response = await cache.match(request.url);
 
-  // If not cached yet, fetch online with clean GET
   if (!response) {
     try {
       const cleanReq = new Request(request.url, { method: "GET" });
@@ -410,7 +446,6 @@ async function handleAudioFetch(request) {
     }
   }
 
-  // Handle Range Header for HTML5 <audio>
   const rangeHeader = request.headers.get("range");
   if (rangeHeader && response) {
     const arrayBuffer = await response.clone().arrayBuffer();

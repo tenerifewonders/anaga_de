@@ -228,30 +228,58 @@
 
     let userMarker = null;
 
-    map.locate({
-      watch: true,
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 5000
-    });
-
-    map.on('locationfound', e => {
+    function updatePosition(lat, lng) {
+      const latlng = [lat, lng];
       if (!userMarker) {
-        userMarker = L.circleMarker(e.latlng, {
+        userMarker = L.circleMarker(latlng, {
           radius: 8,
           color: "#007bff",
           fillColor: "#3fa0ff",
           fillOpacity: 0.8
         }).addTo(map);
       } else {
-        userMarker.setLatLng(e.latlng);
+        userMarker.setLatLng(latlng);
       }
-    });
+    }
+
+    if ("geolocation" in navigator) {
+      // 1. Instant coarse fix
+      navigator.geolocation.getCurrentPosition(
+        pos => updatePosition(pos.coords.latitude, pos.coords.longitude),
+        err => console.warn("[GPS Coarse]", err.message),
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 10000 }
+      );
+
+      // 2. Continuous real-time high-accuracy tracking
+      navigator.geolocation.watchPosition(
+        pos => updatePosition(pos.coords.latitude, pos.coords.longitude),
+        err => console.warn("[GPS Watch]", err.message),
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 2000 }
+      );
+    }
   </script>
 
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./service-worker.js");
+      navigator.serviceWorker.register("./service-worker.js").then(reg => {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+      });
+
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+                        || window.navigator.standalone === true 
+                        || document.referrer.includes('android-app://');
+
+      if (isStandalone) {
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+      }
     }
   </script>
   <script>
